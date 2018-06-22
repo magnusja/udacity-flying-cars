@@ -2,14 +2,17 @@ import argparse
 import time
 import msgpack
 from enum import Enum, auto
+from sklearn.neighbors import KDTree
 
 import numpy as np
 
-from planning_utils import a_star, heuristic, create_grid, prune_path_bresenham
+from planning_utils import a_star, a_star_graph, heuristic, create_grid, prune_path_bresenham
 from udacidrone import Drone
 from udacidrone.connection import MavlinkConnection
 from udacidrone.messaging import MsgID
 from udacidrone.frame_utils import global_to_local
+
+from prm import prm
 
 
 class States(Enum):
@@ -145,26 +148,43 @@ class MotionPlanning(Drone):
         # Read in obstacle map
         data = np.loadtxt('colliders.csv', delimiter=',', dtype='Float64', skiprows=2)
         
+
         # Define a grid for a particular altitude and safety margin around obstacles
         grid, north_offset, east_offset = create_grid(data, TARGET_ALTITUDE, SAFETY_DISTANCE)
         print("North offset = {0}, east offset = {1}".format(north_offset, east_offset))
-        # Define starting point on the grid (this is just grid center)
-        grid_start = (int(self._north) - north_offset, int(self._north) - east_offset)
-        
+    
         goal_pos = global_to_local((-122.397967, 37.792010, 0), self.global_home)
-        # Set goal as some arbitrary position on the grid
-        grid_goal = (-north_offset + int(goal_pos[0]), -east_offset + int(goal_pos[1]))
 
-        # Run A* to find a path from start to goal
-        print('Local Start and Goal: ', grid_start, grid_goal)
-        path, _ = a_star(grid, heuristic, grid_start, grid_goal)
-        # TODO: prune path to minimize number of waypoints
-        # TODO (if you're feeling ambitious): Try a different approach altogether!
+        use_grid = False
 
-        path = prune_path_bresenham(path, grid)
+        if use_grid:
+            # Set goal as some arbitrary position on the grid
+            grid_goal = (-north_offset + int(goal_pos[0]), -east_offset + int(goal_pos[1]))
+            # Define starting point on the grid (this is just grid center)
+            grid_start = (int(self._north) - north_offset, int(self._north) - east_offset)
+            # Run A* to find a path from start to goal
+            print('Local Start and Goal: ', grid_start, grid_goal)
+            path, _ = a_star(grid, heuristic, grid_start, grid_goal)
+            path = prune_path_bresenham(path, grid)
 
-        # Convert path to waypoints
-        waypoints = [[p[0] + north_offset, p[1] + east_offset, TARGET_ALTITUDE, 0] for p in path]
+            # Convert path to waypoints
+            waypoints = [[p[0] + north_offset, p[1] + east_offset, TARGET_ALTITUDE, 0] for p in path]
+        else:
+            start_graph = (int(self._north), int(self._north), 0)
+            goal_graph = goal_pos
+            graph, nodes = prm(data, num_samples=250, extra_points=[])
+            print(graph.nodes)
+            tree = KDTree(nodes)
+            indicies = tree.query([start_graph], 1, return_distance=False)[0]
+            start_graph = int(indicies[0])
+            indicies = tree.query([goal_graph], 1, return_distance=False)[0]
+            goal_graph = int(indicies[0])
+
+            path, _ = a_star_graph(graph, heuristic, start_graph, goal_graph)
+            
+            # Convert path to waypoints
+            waypoints = [[p[0], p[1], TARGET_ALTITUDE, 0] for p in path]
+
         # Set self.waypoints
         self.waypoints = waypoints
         # TODO: send waypoints to sim (this is just for visualization of waypoints)
