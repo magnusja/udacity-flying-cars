@@ -33,41 +33,44 @@ The first thing to notice is that there is a new state for planning. This state 
 ### Implementing Your Path Planning Algorithm
 
 #### 1. Set your global home position
-Here students should read the first line of the csv file, extract lat0 and lon0 as floating point values and use the self.set_home_position() method to set global home. Explain briefly how you accomplished this in your code.
 
-
-And here is a lovely picture of our downtown San Francisco environment from above!
-![Map of SF](./misc/map.png)
+My code for this is first reading the first line of the `colliders.csv`, strips unnecessary parts so that only the values for latitude and longditude remain. After that I use the setter to set the global home position to these particular values.
 
 #### 2. Set your current local position
-Here as long as you successfully determine your local position relative to global home you'll be all set. Explain briefly how you accomplished this in your code.
 
-
-Meanwhile, here's a picture of me flying through the trees!
-![Forest Flying](./misc/in_the_trees.png)
+First I read the current global local using `_longitude`, `_latitude` and `_altitude`. After that I convert this position to the local coordinate frame using `global_to_local`. The return values I use to set `_north`, `_east` and `_down`.
 
 #### 3. Set grid start position from local position
-This is another step in adding flexibility to the start location. As long as it works you're good to go!
+
+In the previous step I extracted the local position, which I use now together with the grid offsets to set the starting point inside the grid.
+
+Instead of using a grid I also implemented Probabilistic Roadmaps and created a graph structure. I noticed that creating the graph does take a lot longer than only using the grid. I used the A* algorithm from the video lectures to be able to find a way through a graph.
+
+In my code there is a falg called `use_grid` in the `plan_path()` method, which swicthes between PRM and grid based navigation.
 
 #### 4. Set grid goal position from geodetic coords
-This step is to add flexibility to the desired goal location. Should be able to choose any (lat, lon) within the map and have it rendered to a goal location on the grid.
+
+I looked for a position on google maps, extracted latitude and longditude and convert this position to a local one using again `global_to_local`. After that I convert the local position to a position inside the grid (using the grid offsets again).
 
 #### 5. Modify A* to include diagonal motion (or replace A* altogether)
-Minimal requirement here is to modify the code in planning_utils() to update the A* implementation to include diagonal motions on the grid that have a cost of sqrt(2), but more creative solutions are welcome. Explain the code you used to accomplish this step.
+
+This was an easy step. I just added these actions to the action enum with the corresponding cost, nothing else to do!
 
 #### 6. Cull waypoints 
-For this step you can use a collinearity test or ray tracing method like Bresenham. The idea is simply to prune your path of unnecessary waypoints. Explain the code you used to accomplish this step.
 
+I first tried a simple collinearity check, and then implemented a pruning method based on bresenham. This reduces the number of waypoints to a minimum!
 
 
 ### Execute the flight
 #### 1. Does it work?
 It works!
 
-### Double check that you've met specifications for each of the [rubric](https://review.udacity.com/#!/rubrics/1534/view) points.
-  
-# Extra Challenges: Real World Planning
+I noticed that pruning the waypoints is really usefule. Having to many waypoints close together oftentimes leads to crashes!
 
-For an extra challenge, consider implementing some of the techniques described in the "Real World Planning" lesson. You could try implementing a vehicle model to take dynamic constraints into account, or implement a replanning method to invoke if you get off course or encounter unexpected obstacles.
+### Possible extensions (if time permits)
+
+* (local) 3D planning
+* receding horizon planning or replanning
+* Other algorithms like RRT, PFM
 
 
