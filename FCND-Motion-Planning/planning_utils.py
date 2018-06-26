@@ -159,6 +159,7 @@ def a_star_graph(graph, heuristic, start, goal):
         item = queue.get()
         current_cost = item[0]
         current_node = item[1]
+        print(type(current_node))
 
         if current_node == goal:        
             print('Found a path.')
@@ -178,10 +179,13 @@ def a_star_graph(graph, heuristic, start, goal):
     path = []
     path_cost = 0
     if found:
+
+        print(branch)
         
         # retrace steps
         path = []
         n = goal
+        path.append(goal)
         path_cost = branch[n][0]
         while branch[n][1] != start:
             path.append(branch[n][1])

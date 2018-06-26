@@ -14,7 +14,7 @@ def can_connect(p1, p2, polygons):
     return True
 
 
-def create_graph(nodes, polygons, k=10):
+def create_graph(nodes, polygons, k=5):
     g = nx.Graph()
     tree = KDTree(nodes)
     for n in nodes:
@@ -26,7 +26,7 @@ def create_graph(nodes, polygons, k=10):
                 continue
             
             if can_connect(n, target_node, polygons):
-                g.add_edge(n, target_node, weight=1)
+                g.add_edge(tuple(n), tuple(target_node), weight=1)
 
     return g
 

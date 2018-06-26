@@ -83,6 +83,7 @@ class MotionPlanning(Drone):
     def takeoff_transition(self):
         self.flight_state = States.TAKEOFF
         print("takeoff transition")
+        print(self.target_position[2])
         self.takeoff(self.target_position[2])
 
     def waypoint_transition(self):
@@ -161,7 +162,7 @@ class MotionPlanning(Drone):
             # Set goal as some arbitrary position on the grid
             grid_goal = (-north_offset + int(goal_pos[0]), -east_offset + int(goal_pos[1]))
             # Define starting point on the grid (this is just grid center)
-            grid_start = (int(self._north) - north_offset, int(self._north) - east_offset)
+            grid_start = (int(self._north) - north_offset, int(self._east) - east_offset)
             # Run A* to find a path from start to goal
             print('Local Start and Goal: ', grid_start, grid_goal)
             path, _ = a_star(grid, heuristic, grid_start, grid_goal)
@@ -170,20 +171,28 @@ class MotionPlanning(Drone):
             # Convert path to waypoints
             waypoints = [[p[0] + north_offset, p[1] + east_offset, TARGET_ALTITUDE, 0] for p in path]
         else:
-            start_graph = (int(self._north), int(self._north), 0)
-            goal_graph = goal_pos
-            graph, nodes = prm(data, num_samples=250, extra_points=[])
-            print(graph.nodes)
+            start_graph = (self._north, self._east, 0.0)
+            goal_graph = tuple(goal_pos)
+            print(start_graph)
+            print(goal_graph)
+            # num samples needs to be low because otherwise simulator does not react to commands after some timout I believe?
+            # how can I speed up the connect edge code?
+            graph, nodes = prm(data, num_samples=100, extra_points=[start_graph, goal_graph])
             tree = KDTree(nodes)
-            indicies = tree.query([start_graph], 1, return_distance=False)[0]
-            start_graph = int(indicies[0])
-            indicies = tree.query([goal_graph], 1, return_distance=False)[0]
-            goal_graph = int(indicies[0])
+            indicies = tree.query([start_graph], 10, return_distance=False)[0]
+            start_graph = nodes[int(indicies[0])]
+            indicies = tree.query([goal_graph], 10, return_distance=False)[0]
+            goal_graph = nodes[int(indicies[0])]
 
             path, _ = a_star_graph(graph, heuristic, start_graph, goal_graph)
             
             # Convert path to waypoints
-            waypoints = [[p[0], p[1], TARGET_ALTITUDE, 0] for p in path]
+            # Why do I need to cast this to int?
+            # does the simulator / API not support exact foat valuesfor coordinates?
+            # When I do not change to int this just hangs at takeoff transition
+            waypoints = [[int(p[0]), int(p[1]), TARGET_ALTITUDE, 0] for p in path]
+
+        print(waypoints)
 
         # Set self.waypoints
         self.waypoints = waypoints

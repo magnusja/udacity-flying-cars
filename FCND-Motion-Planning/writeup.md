@@ -46,7 +46,9 @@ In the previous step I extracted the local position, which I use now together wi
 
 Instead of using a grid I also implemented Probabilistic Roadmaps and created a graph structure. I noticed that creating the graph does take a lot longer than only using the grid. I used the A* algorithm from the video lectures to be able to find a way through a graph.
 
-In my code there is a falg called `use_grid` in the `plan_path()` method, which swicthes between PRM and grid based navigation.
+To set the start and goal position, I add these positions to the manually sampler to be included in the resulting point. This means start and goal position must lie in free space! 
+
+In my code there is a flag called `use_grid` in the `plan_path()` method, which swicthes between PRM and grid based navigation.
 
 #### 4. Set grid goal position from geodetic coords
 
@@ -56,9 +58,13 @@ I looked for a position on google maps, extracted latitude and longditude and co
 
 This was an easy step. I just added these actions to the action enum with the corresponding cost, nothing else to do!
 
+For PRM I adjusted the A* implementation to work on graphs. To create the graph and connect edges I used `KDTree` to find edges close to each other and `LineString.crosses(Polygon)` to see if there are abostacles between nodes. The latter method seems to be quite slow. How could I improve that? I even feel like it takes so much time the simulator does not react to commands afterwards anymore! Takeoff transition usually hangs. Can I increase the timeout somehow?
+
 #### 6. Cull waypoints 
 
 I first tried a simple collinearity check, and then implemented a pruning method based on bresenham. This reduces the number of waypoints to a minimum!
+
+For PRM this is not necessary, because I do not have a grid anyways (although one could think of a different approach to prune).
 
 
 ### Execute the flight
