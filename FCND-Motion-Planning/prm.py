@@ -14,7 +14,7 @@ def can_connect(p1, p2, polygons):
     return True
 
 
-def create_graph(nodes, polygons, k=5):
+def create_graph(nodes, polygons, k=10):
     g = nx.Graph()
     tree = KDTree(nodes)
     for n in nodes:

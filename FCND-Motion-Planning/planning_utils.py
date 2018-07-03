@@ -90,6 +90,15 @@ def valid_actions(grid, current_node):
     if y + 1 > m or grid[x, y + 1] == 1:
         valid_actions.remove(Action.EAST)
 
+    if x - 1 < 0 or y + 1 > m or grid[x - 1, y + 1] == 1:
+        valid_actions.remove(Action.NORTH_EAST)
+    if x - 1 < 0 or y - 1 < 0 or grid[x - 1, y - 1] == 1:
+        valid_actions.remove(Action.NORTH_WEST)
+    if x + 1 > m or y + 1 > m or grid[x + 1, y + 1] == 1:
+        valid_actions.remove(Action.SOUTH_EAST)
+    if x + 1 > m or y - 1 < 0 or grid[x + 1, y - 1] == 1:
+        valid_actions.remove(Action.SOUTH_WEST)
+
     return valid_actions
 
 
@@ -178,10 +187,7 @@ def a_star_graph(graph, heuristic, start, goal):
              
     path = []
     path_cost = 0
-    if found:
-
-        print(branch)
-        
+    if found:        
         # retrace steps
         path = []
         n = goal
@@ -191,6 +197,11 @@ def a_star_graph(graph, heuristic, start, goal):
             path.append(branch[n][1])
             n = branch[n][1]
         path.append(branch[n][1])
+
+    else:
+        print('**********************')
+        print('Failed to find a path!')
+        print('**********************') 
             
     return path[::-1], path_cost
 
@@ -272,7 +283,7 @@ def bresenham(p1, p2):
 def is_safe_path(cells, grid):
     
     for c in cells:
-        if grid[c[0], c[1]] > 0:
+        if grid[c[0], c[1]] == 1.0:
             return False
 
     return True
@@ -281,17 +292,34 @@ def prune_path_bresenham(path, grid):
     pruned_path = [path[0]]
     last_safe = path[0]
     start = path[0]
+    i = 1
 
-    for p in path:
-        cells = bresenham(start, p)
+    while i < len(path):
+        print(i)
+        p = path[i]
+        if start < p:
+            cells = bresenham(start, p)
+        else: 
+            cells = bresenham(p, start)
 
         if is_safe_path(cells, grid):
             last_safe = p
+            i += 1
         else:
+            if last_safe == pruned_path[-1]:
+                print(start)
+                print(p)
+                print(cells)
+                continue
             pruned_path.append(last_safe)
-            start_point = last_safe
+            start = last_safe
 
-    pruned_path.append(last_safe)
+
+    if pruned_path[-1] != last_safe:
+        pruned_path.append(last_safe)
+
+    if pruned_path[-1] != path[-1]:
+        print('WARNIG: Oh snap pruned path does not include goal pos for some reason :(')
 
     return pruned_path
 

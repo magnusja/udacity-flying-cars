@@ -119,7 +119,7 @@ class MotionPlanning(Drone):
         self.flight_state = States.PLANNING
         print("Searching for a path ...")
         TARGET_ALTITUDE = 5
-        SAFETY_DISTANCE = 3
+        SAFETY_DISTANCE = 1
 
         self.target_position[2] = TARGET_ALTITUDE
 
@@ -154,9 +154,16 @@ class MotionPlanning(Drone):
         grid, north_offset, east_offset = create_grid(data, TARGET_ALTITUDE, SAFETY_DISTANCE)
         print("North offset = {0}, east offset = {1}".format(north_offset, east_offset))
     
-        goal_pos = global_to_local((-122.397967, 37.792010, 0), self.global_home)
+        #goal_pos = global_to_local((-122.397967, 37.792010, 0), self.global_home)
+        #goal_pos = global_to_local((-122.399177, 37.791030, 0), self.global_home)
+        #goal_pos = global_to_local((-122.399646, 37.791320, 0), self.global_home)
+        #goal_pos = global_to_local((-122.399646, 37.791320, 0), self.global_home)
+        goal_pos = global_to_local((-122.392980, 37.792826, 0), self.global_home)
 
-        use_grid = False
+        # this one is out of bounds
+        #goal_pos = global_to_local((-122.402583, 37.791741, 0), self.global_home)
+
+        use_grid = True
 
         if use_grid:
             # Set goal as some arbitrary position on the grid
@@ -177,7 +184,7 @@ class MotionPlanning(Drone):
             print(goal_graph)
             # num samples needs to be low because otherwise simulator does not react to commands after some timout I believe?
             # how can I speed up the connect edge code?
-            graph, nodes = prm(data, num_samples=100, extra_points=[start_graph, goal_graph])
+            graph, nodes = prm(data, num_samples=400, extra_points=[start_graph, goal_graph])
             tree = KDTree(nodes)
             indicies = tree.query([start_graph], 10, return_distance=False)[0]
             start_graph = nodes[int(indicies[0])]
