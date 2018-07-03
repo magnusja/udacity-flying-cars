@@ -163,7 +163,7 @@ class MotionPlanning(Drone):
         # this one is out of bounds
         #goal_pos = global_to_local((-122.402583, 37.791741, 0), self.global_home)
 
-        use_grid = True
+        use_grid = False
 
         if use_grid:
             # Set goal as some arbitrary position on the grid

@@ -168,7 +168,6 @@ def a_star_graph(graph, heuristic, start, goal):
         item = queue.get()
         current_cost = item[0]
         current_node = item[1]
-        print(type(current_node))
 
         if current_node == goal:        
             print('Found a path.')
@@ -295,7 +294,6 @@ def prune_path_bresenham(path, grid):
     i = 1
 
     while i < len(path):
-        print(i)
         p = path[i]
         if start < p:
             cells = bresenham(start, p)
@@ -307,9 +305,6 @@ def prune_path_bresenham(path, grid):
             i += 1
         else:
             if last_safe == pruned_path[-1]:
-                print(start)
-                print(p)
-                print(cells)
                 continue
             pruned_path.append(last_safe)
             start = last_safe
